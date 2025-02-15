@@ -543,6 +543,46 @@ function App() {
                       );
                     })}
                   </tr>
+                  {/* Riadok so sumárnym Total Profit/Loss za všetky coiny dokopy */}
+                  <tr style={{ fontWeight: "bold", backgroundColor: "#333" }}>
+                    <td>Grand Total Profit/Loss</td>
+                    <td colSpan={coins.length} style={{ textAlign: "center" }}>
+                      {(() => {
+                        // Spočítame Total Profit/Loss pre všetky coiny dokopy
+                        const grandTotalProfitLoss = coins.reduce(
+                          (totalSum, coin) => {
+                            const groupedTransactions =
+                              groupTransactionsByMonth(coin);
+                            const totalProfitLoss = Object.values(
+                              groupedTransactions
+                            ).reduce(
+                              (sum, transaction) =>
+                                sum +
+                                (transaction.withdraw - transaction.deposit),
+                              0
+                            );
+                            return totalSum + totalProfitLoss;
+                          },
+                          0
+                        );
+
+                        return (
+                          <div
+                            style={{
+                              color:
+                                grandTotalProfitLoss >= 0
+                                  ? "lightgreen"
+                                  : "red",
+                              fontSize: "18px",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {grandTotalProfitLoss.toFixed(2)}€
+                          </div>
+                        );
+                      })()}
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
