@@ -177,6 +177,12 @@ function App() {
         } else if (transaction.type === "withdraw") {
           totalDeposit -= transaction.price;
           totalAmount -= transaction.amount;
+          if (totalDeposit <= 0) {
+            totalDeposit = 0;
+          }
+          if (totalAmount <= 0) {
+            totalAmount = 0;
+          }
         }
       });
 
@@ -361,7 +367,7 @@ function App() {
         {/* Nová tabuľka pre celkové súčty depositov */}
         <div style={{ marginTop: "-30px" }}>
           <h3 style={{ marginLeft: "20px" }} className="text-left mt-4">
-            Total statistics
+            Actual statistics
           </h3>
           <div className="table-responsive small">
             <table
@@ -373,8 +379,8 @@ function App() {
                   <th>Coin</th>
                   <th>Total Deposit</th>
                   <th>Total Amount</th>
-                  <th>Actual price(EUR)</th>
-                  <th>Profit/Loss(€)</th>
+                  <th>Actual price</th>
+                  <th>Profit/Loss</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -382,16 +388,18 @@ function App() {
                 {totals.map((coin) => (
                   <tr key={coin.id}>
                     <td>{coin.name}</td>
-                    <td className="text-end">{coin.totalDeposit.toFixed(2)}</td>
+                    <td className="text-end">
+                      {coin.totalDeposit.toFixed(2)}€
+                    </td>
                     <td className="text-end">{coin.totalAmount.toFixed(7)}</td>
-                    <td className="text-end">{coin.price.toFixed(2)}</td>
+                    <td className="text-end">{coin.price.toFixed(2)}€</td>
                     <td
                       className="text-end"
                       style={{
                         color: coin.profitLoss >= 0 ? "lightgreen" : "red",
                       }}
                     >
-                      {coin.profitLoss.toFixed(2)}
+                      {coin.profitLoss.toFixed(2)}€
                     </td>
                     <td className="text-center">
                       <button
@@ -411,8 +419,8 @@ function App() {
 
                 {/* CELKOVÉ SUMY */}
                 <tr className="fw-bold table-secondary table-dark">
-                  <td>TOTAL</td>
-                  <td className="text-end">{totalDepositAll.toFixed(2)}</td>
+                  <td>Placed value</td>
+                  <td className="text-end">{totalDepositAll.toFixed(2)}€</td>
                   <td className="text-end">—</td>
                   <td className="text-end">—</td>
                   <td
@@ -420,7 +428,7 @@ function App() {
                       totalProfitLossAll >= 0 ? "text-success" : "text-danger"
                     }`}
                   >
-                    {totalProfitLossAll.toFixed(2)}
+                    {totalProfitLossAll.toFixed(2)}€
                   </td>
                   <td></td> {/* Prázdny stĺpec na zarovnanie */}
                 </tr>
@@ -433,7 +441,7 @@ function App() {
 
         <div>
           <h3 style={{ marginLeft: "20px" }} className="text-left mt-4">
-            Crypto Transactions by Month
+            Total statistics by Month
           </h3>
           {coins.length === 0 ? (
             <p>Loading coins...</p>
@@ -457,48 +465,84 @@ function App() {
                   {coins
                     .flatMap((coin) =>
                       Object.keys(groupTransactionsByMonth(coin))
-                    ) // Získame všetky mesiace
+                    )
                     .filter(
                       (value, index, self) => self.indexOf(value) === index
-                    ) // Unikátne mesiace
-                    .sort() // Zoradenie mesiacov
+                    )
+                    .sort()
                     .map((monthYear) => (
                       <tr key={monthYear}>
-                        <td style={{ paddingTop: "25px" }}>{monthYear}</td>
+                        <td style={{ paddingTop: "15px" }}>{monthYear}</td>
                         {coins.map((coin) => {
                           const groupedTransactions =
                             groupTransactionsByMonth(coin);
                           const transactions = groupedTransactions[
                             monthYear
-                          ] || { deposit: 0, withdraw: 0, total: 0 }; // Ošetrenie neexistujúcich transakcií
-
+                          ] || { deposit: 0, withdraw: 0, total: 0 };
                           // Vypočítať celkový výnos/stratu
                           transactions.total =
-                            transactions.deposit - transactions.withdraw;
-
+                            transactions.withdraw - transactions.deposit;
                           return (
                             <td key={coin._id}>
                               <tr>
-                                <div style={{ color: "dark" }}>
+                                <div style={{ color: "white" }}>
                                   Deposits: {transactions.deposit.toFixed(2)}€
                                 </div>
                               </tr>
                               <tr>
-                                <div style={{ color: "lightgrey" }}>
+                                <div style={{ color: "white" }}>
                                   Withdrawals:{" "}
                                   {transactions.withdraw.toFixed(2)}€
                                 </div>
                               </tr>
                               <tr>
-                                <div style={{ color: "lightgreen" }}>
-                                  Invested: {transactions.total.toFixed(2)}€
-                                </div>
+                                {/* <div
+                                  style={{
+                                    color:
+                                      transactions.total >= 0
+                                        ? "lightgreen"
+                                        : "red",
+                                  }}
+                                >
+                                  Profit/Loss: {transactions.total.toFixed(2)}€
+                                </div> */}
                               </tr>
                             </td>
                           );
                         })}
                       </tr>
                     ))}
+
+                  {/* Riadok so sumárnym Profit/Loss za všetky mesiace pre každý coin */}
+                  <tr style={{ fontWeight: "bold", backgroundColor: "#222" }}>
+                    <td>Total Profit/Loss</td>
+                    {coins.map((coin) => {
+                      // Vypočítať celkový profit/loss podľa vzorca withdrawals - deposits
+                      const groupedTransactions =
+                        groupTransactionsByMonth(coin);
+                      const totalProfitLoss = Object.values(
+                        groupedTransactions
+                      ).reduce(
+                        (sum, transaction) =>
+                          sum + (transaction.withdraw - transaction.deposit),
+                        0
+                      );
+
+                      return (
+                        <td key={coin._id}>
+                          <div
+                            style={{
+                              color:
+                                totalProfitLoss >= 0 ? "lightgreen" : "red",
+                              fontSize: "16px",
+                            }}
+                          >
+                            {totalProfitLoss.toFixed(2)}€
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
                 </tbody>
               </table>
             </div>
