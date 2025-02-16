@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [coins, setCoins] = useState([]);
+  const [coinsKraken, setCoinsKraken] = useState([]);
   const [prices, setPrices] = useState({});
   const [newCoin, setNewCoin] = useState({ name: "", api_id: "" });
   const [newTransaction, setNewTransaction] = useState({
@@ -20,12 +21,25 @@ function App() {
     fetchCoins();
   }, []);
 
+  useEffect(() => {
+    fetchCoinsKraken();
+  }, []);
+
   const fetchCoins = async () => {
     try {
       const response = await axios.get("/api/coins");
       setCoins(response.data);
     } catch (error) {
-      console.error("Error fetching coins:", error);
+      console.error("Error fetching assets:", error);
+    }
+  };
+
+  const fetchCoinsKraken = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:5000/"); // Volanie Flask backendu
+      setCoinsKraken(response.data.result); // Kraken API vráti objekt { "result": { "XXBT": "0.123", "ZUSD": "250.00" } }
+    } catch (error) {
+      console.error("Error fetching Kraken assets:", error);
     }
   };
 
@@ -90,12 +104,12 @@ function App() {
 
     try {
       await axios.post("/api/coins", newCoin);
-      toast.success("Coin was successfully added!");
+      toast.success("Asset was successfully added!");
       setNewCoin({ name: "", api_id: "" });
       fetchCoins();
     } catch (error) {
-      console.error("Error: coin wasnt added", error);
-      toast.error("Error while adding coin!");
+      console.error("Error: asset wasnt added", error);
+      toast.error("Error while adding asset!");
     }
   };
 
@@ -154,11 +168,11 @@ function App() {
     try {
       await axios.delete(`/api/coins/${coinId}`);
       toast.dismiss();
-      toast.success("Coin deleted successfully!");
+      toast.success("Asset deleted successfully!");
       fetchCoins();
     } catch (error) {
-      console.error("Error deleting coin:", error);
-      toast.error("Failed to delete coin.");
+      console.error("Error deleting asset:", error);
+      toast.error("Failed to delete asset.");
     }
   };
 
@@ -236,7 +250,7 @@ function App() {
 
         {/* Pridanie noveho coinu */}
         <div style={{ marginTop: "0px" }} className="table-responsive small">
-          <h4 className="text-left mt-4">Add new coin</h4>
+          <h4 className="text-left mt-4">Add New Asset</h4>
           <table className="table table-striped table-bordered table-sm text-nowrap">
             <tbody>
               <tr className="table-dark">
@@ -273,7 +287,7 @@ function App() {
                     className="btn btn-success btn-sm"
                     onClick={handleAddCoin}
                   >
-                    Add Coin
+                    Add Asset
                   </button>
                 </td>
               </tr>
@@ -296,7 +310,7 @@ function App() {
                       handleNewTransactionChange("coinId", e.target.value)
                     }
                   >
-                    <option value="">Choose coin</option>
+                    <option value="">Choose Asset</option>
                     {coins.map((coin) => (
                       <option key={coin._id} value={coin._id}>
                         {coin.name}
@@ -376,10 +390,10 @@ function App() {
             >
               <thead className="table-dark text-center">
                 <tr>
-                  <th>Coin</th>
-                  <th>Total Deposit</th>
-                  <th>Total Amount</th>
-                  <th>Actual price</th>
+                  <th>Asset</th>
+                  <th>Actual Deposit</th>
+                  <th>Actual Amount</th>
+                  <th>Actual Price</th>
                   <th>Profit/Loss</th>
                   <th>Action</th>
                 </tr>
@@ -391,7 +405,7 @@ function App() {
                     <td className="text-end">
                       {coin.totalDeposit.toFixed(2)}€
                     </td>
-                    <td className="text-end">{coin.totalAmount.toFixed(7)}</td>
+                    <td className="text-end">{coin.totalAmount.toFixed(8)}</td>
                     <td className="text-end">{coin.price.toFixed(2)}€</td>
                     <td
                       className="text-end"
@@ -444,7 +458,7 @@ function App() {
             Total statistics by Month
           </h3>
           {coins.length === 0 ? (
-            <p>Loading coins...</p>
+            <p>Loading assets...</p>
           ) : (
             <div className="table-responsive small">
               {/* Zobrazenie transakcií v tabuľke */}
@@ -588,7 +602,16 @@ function App() {
             </div>
           )}
         </div>
-
+        <div>
+      {/* <h2>Kraken Balances</h2>
+      <ul>
+        {coinsKraken && Object.entries(coinsKraken).map(([coin, balance]) => (
+          <li key={coin}>
+            {coin}: {balance}
+          </li>
+        ))}
+      </ul> */}
+    </div>
         {/* Zobrazenie transakcii*/}
       </div>
     </div>
