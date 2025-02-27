@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
-import AddAsset from "./Components/AddAsset";
-import ExecuteTransaction from "./Components/ExecuteTransaction";
-import ActualStatistics from "./Components/ActualStatistics";
-import TotalStatisticsByMonth from "./Components/TotalStatisctics";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
 
-
-const App = () => {
+function App() {
   const [coins, setCoins] = useState([]);
   const [prices, setPrices] = useState({});
   const [newCoin, setNewCoin] = useState({ name: "", api_id: "" });
@@ -20,7 +15,6 @@ const App = () => {
     amount: "",
     price: "",
   });
-
   useEffect(() => {
     fetchCoins();
   }, []);
@@ -34,12 +28,38 @@ const App = () => {
     }
   };
 
+  // Funkcia na konverziu timestamp do formátu "mm-yyyy"
+  const getMonthYear = (timestamp) => {
+    const date = new Date(timestamp);
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // mesiace sú indexované od 0
+    const year = date.getFullYear();
+    return `${month}-${year}`;
+  };
+  // Funkcia na zoskupenie transakcií podľa mesiacov
+  const groupTransactionsByMonth = (coin) => {
+    const groupedTransactions = {};
+    coin.transactions.forEach((transaction) => {
+      const monthYear = getMonthYear(transaction.timestamp);
+      if (!groupedTransactions[monthYear]) {
+        groupedTransactions[monthYear] = { deposit: 0, withdraw: 0, total: 0 };
+      }
+      // Rozdelenie na vklady a výbery
+      if (transaction.type === "deposit") {
+        groupedTransactions[monthYear].deposit += transaction.price;
+      } else if (transaction.type === "withdraw") {
+        groupedTransactions[monthYear].withdraw += transaction.price;
+      }
+      groupedTransactions[monthYear].total =
+        groupedTransactions[monthYear].deposit -
+        groupedTransactions[monthYear].withdraw;
+    });
+    return groupedTransactions;
+  };
   useEffect(() => {
     if (coins.length > 0) {
       fetchPrices();
     }
   }, [coins]);
-
   const fetchPrices = async () => {
     try {
       const coinIds = coins.map((coin) => coin.api_id).join(",");
@@ -51,7 +71,9 @@ const App = () => {
       console.error("Error fetching prices:", error);
     }
   };
-
+  const handleNewCoinChange = (field, value) => {
+    setNewCoin((prev) => ({ ...prev, [field]: value }));
+  };
   const handleAddCoin = async () => {
     if (!newCoin.name || !newCoin.api_id) {
       toast.warn("Fill out Name and API ID!");
@@ -60,21 +82,27 @@ const App = () => {
 
     try {
       await axios.post("/api/coins", newCoin);
-      toast.success("Asset added successfully!");
+      toast.success("Asset was successfully added!");
       setNewCoin({ name: "", api_id: "" });
       fetchCoins();
     } catch (error) {
-      console.error("Error: asset wasn't added", error);
-      toast.error("Error adding asset!");
+      console.error("Error: asset wasnt added", error);
+      toast.error("Error while adding asset!");
     }
   };
 
+  const handleNewTransactionChange = (field, value) => {
+    setNewTransaction((prev) => ({ ...prev, [field]: value }));
+  };
   const handleAddTransaction = async () => {
-    if (!newTransaction.coinId || !newTransaction.amount || !newTransaction.price) {
+    if (
+      !newTransaction.coinId ||
+      !newTransaction.amount ||
+      !newTransaction.price
+    ) {
       toast.warn("Fill all fields");
       return;
     }
-
     try {
       await axios.patch(`/api/coins/${newTransaction.coinId}/transactions`, {
         type: newTransaction.type,
@@ -89,20 +117,27 @@ const App = () => {
       toast.error("Error adding transaction");
     }
   };
-
   const handleDeleteCoin = async (coinId) => {
     toast.warn(
       <div>
-        <p>Do you really want to delete this coin?</p>
-        <button className="btn btn-success btn-sm" onClick={() => confirmDelete(coinId)} style={{ marginRight: "10px" }}>
+        <p>Do you really want to delete this Asset?</p>
+        <button
+          className="btn btn-success btn-sm"
+          onClick={() => confirmDelete(coinId)}
+          style={{ marginRight: "10px" }}
+        >
           Yes
         </button>
-        <button className="btn btn-danger btn-sm" onClick={() => toast.dismiss()}>No</button>
+        <button
+          className="btn btn-danger btn-sm"
+          onClick={() => toast.dismiss()}
+        >
+          No
+        </button>
       </div>,
       { autoClose: false }
     );
   };
-
   const confirmDelete = async (coinId) => {
     try {
       await axios.delete(`/api/coins/${coinId}`);
@@ -110,19 +145,17 @@ const App = () => {
       toast.success("Asset deleted successfully!");
       fetchCoins();
     } catch (error) {
-      console.error("Error deleting asset:", error);
-      toast.error("Failed to delete asset.");
+      console.error("Error deleting Asset:", error);
+      toast.error("Failed to delete Asset.");
     }
   };
 
   const calculateTotals = () => {
     let totalDepositAll = 0;
     let totalProfitLossAll = 0;
-
     const totals = coins.map((coin) => {
       let totalDeposit = 0;
       let totalAmount = 0;
-
       coin.transactions.forEach((transaction) => {
         if (transaction.type === "deposit") {
           totalDeposit += transaction.price;
@@ -130,77 +163,396 @@ const App = () => {
         } else if (transaction.type === "withdraw") {
           totalDeposit -= transaction.price;
           totalAmount -= transaction.amount;
-          if (totalDeposit <= 0) totalDeposit = 0;
+          if (totalDeposit <= 0) {
+            totalDeposit = 0;
+          }
           if (totalAmount <= 0) {
             totalAmount = 0;
-            totalDeposit = 0;
           }
         }
       });
-
       const price = prices[coin.api_id]?.eur || 0;
       const value = totalAmount * price;
       const profitLoss = value - totalDeposit;
-
       totalDepositAll += totalDeposit;
       totalProfitLossAll += profitLoss;
-
-      return { name: coin.name, id: coin._id, totalDeposit, totalAmount, price, profitLoss };
+      return {
+        name: coin.name,
+        id: coin._id,
+        totalDeposit,
+        totalAmount,
+        price,
+        profitLoss,
+      };
     });
-
     return { totals, totalDepositAll, totalProfitLossAll };
   };
-
-  const getMonthYear = (timestamp) => {
-    const date = new Date(timestamp);
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${month}-${year}`;
-  };
-
-  const groupTransactionsByMonth = (coin) => {
-    const groupedTransactions = {};
-
-    coin.transactions.forEach((transaction) => {
-      const monthYear = getMonthYear(transaction.timestamp);
-      if (!groupedTransactions[monthYear]) {
-        groupedTransactions[monthYear] = { deposit: 0, withdraw: 0, total: 0 };
-      }
-
-      if (transaction.type === "deposit") {
-        groupedTransactions[monthYear].deposit += transaction.price;
-      } else if (transaction.type === "withdraw") {
-        groupedTransactions[monthYear].withdraw += transaction.price;
-      }
-      groupedTransactions[monthYear].total =
-        groupedTransactions[monthYear].deposit - groupedTransactions[monthYear].withdraw;
-    });
-
-    return groupedTransactions;
-  };
-
   const { totals, totalDepositAll, totalProfitLossAll } = calculateTotals();
-
   return (
-    <div className="container mt-4">
-      <h2 style={{marginLeft:'100px'}} className="text-left">Crypto Portfolio Tracker</h2>
+    <div>
+      <ToastContainer position="top-center" autoClose={2000} hideProgressBar />
+      <div>
+        <div
+          style={{
+            background: "#211f1f",
+            width: "140.2%",
+            height: "100px",
+            marginLeft: "-551px",
+            marginTop: "-20px",
+            padding: "0px",
+            color: "#f4f4f4",
+          }}
+        >
+          <h1
+            style={{
+              paddingTop: "30px",
+              paddingLeft: "750px",
+            }}
+            className="text-left mb-4"
+          >
+            Crypto Dashboard
+          </h1>
+        </div>
 
-      <AddAsset newCoin={newCoin} setNewCoin={setNewCoin} handleAddCoin={handleAddCoin} />
-      <ExecuteTransaction
-        coins={coins}
-        newTransaction={newTransaction}
-        setNewTransaction={setNewTransaction}
-        handleAddTransaction={handleAddTransaction}
-      />
-      <ActualStatistics
-        totals={totals}
-        totalDepositAll={totalDepositAll}
-        totalProfitLossAll={totalProfitLossAll}
-        handleDeleteCoin={handleDeleteCoin}
-      />
-      <TotalStatisticsByMonth coins={coins} groupTransactionsByMonth={groupTransactionsByMonth} />
+        {/* Pridanie noveho coinu */}
+        <div style={{ marginTop: "0px" }} className="table-responsive small">
+          <h4 className="text-left mt-4">Add New Asset</h4>
+          <table className="table table-striped table-bordered table-sm text-nowrap">
+            <tbody>
+              <tr className="table-dark">
+                <td style={{ paddingRight: "10px" }}>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Name"
+                    value={newCoin.name}
+                    onChange={(e) =>
+                      handleNewCoinChange("name", e.target.value)
+                    }
+                  />
+                </td>
+                <td style={{ paddingRight: "10px", paddingLeft: "10px" }}>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="API ID"
+                    value={newCoin.api_id}
+                    onChange={(e) =>
+                      handleNewCoinChange("api_id", e.target.value)
+                    }
+                  />
+                </td>
+                <td style={{ paddingRight: "20px" }} className="text-center">
+                  <button
+                    style={{
+                      margin: "3px",
+                      marginLeft: "20px",
+                      paddingLeft: "50px",
+                      paddingRight: "50px",
+                    }}
+                    className="btn btn-success btn-sm"
+                    onClick={handleAddCoin}
+                  >
+                    Add Asset
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        {/* Pridanie transakcie */}
+        <div style={{ marginTop: "-30px" }} className="table-responsive small">
+          <h4 className="text-left mt-4">Execute transaction</h4>
+          <table className="table table-striped table-bordered table-sm text-nowrap">
+            <tbody>
+              <tr className="table-dark">
+                <td style={{ paddingRight: "20px" }}>
+                  <select
+                    style={{ cursor: "pointer" }}
+                    className="form-control"
+                    value={newTransaction.coinId}
+                    onChange={(e) =>
+                      handleNewTransactionChange("coinId", e.target.value)
+                    }
+                  >
+                    <option value="">Choose Asset</option>
+                    {coins.map((coin) => (
+                      <option key={coin._id} value={coin._id}>
+                        {coin.name}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td style={{ paddingRight: "10px", paddingLeft: "10px" }}>
+                  <select
+                    style={{ cursor: "pointer" }}
+                    className="form-control"
+                    value={newTransaction.type}
+                    onChange={(e) =>
+                      handleNewTransactionChange("type", e.target.value)
+                    }
+                  >
+                    <option value="deposit">Buy</option>
+                    <option value="withdraw">Sell</option>
+                  </select>
+                </td>
+                <td
+                  style={{
+                    paddingRight: "10px",
+                    paddingLeft: "10px",
+                    width: "150px",
+                  }}
+                >
+                  <input
+                    type="number"
+                    className="form-control"
+                    placeholder="Price(€)"
+                    value={newTransaction.price}
+                    onChange={(e) =>
+                      handleNewTransactionChange("price", e.target.value)
+                    }
+                  />
+                </td>
+                <td
+                  style={{
+                    paddingLeft: "10px",
+                    paddingRight: "10px",
+                    width: "215px",
+                  }}
+                >
+                  <input
+                    type="number"
+                    className="form-control"
+                    placeholder="Amount"
+                    value={newTransaction.amount}
+                    onChange={(e) =>
+                      handleNewTransactionChange("amount", e.target.value)
+                    }
+                  />
+                </td>
+                <td className="text-center">
+                  <button
+                    style={{ margin: "3px" }}
+                    className="btn btn-primary btn-sm"
+                    onClick={handleAddTransaction}
+                  >
+                    Execute
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        {/* Nová tabuľka pre celkové súčty depositov */}
+        <div style={{ marginTop: "-30px" }}>
+          <h3 style={{ marginLeft: "20px" }} className="text-left mt-4">
+            Actual statistics
+          </h3>
+          <div className="table-responsive small">
+            <table
+              style={{ fontSize: "14px", cursor: "pointer" }}
+              className="table table-dark table-striped table-bordered table-sm text-nowrap"
+            >
+              <thead className="table-dark text-center">
+                <tr>
+                  <th>Asset</th>
+                  <th>Actual Deposit</th>
+                  <th>Actual Amount</th>
+                  <th>Actual Price</th>
+                  <th>Profit/Loss</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {totals.map((coin) => (
+                  <tr key={coin.id}>
+                    <td>{coin.name}</td>
+                    <td className="text-end">
+                      {coin.totalDeposit.toFixed(2)}€
+                    </td>
+                    <td className="text-end">{coin.totalAmount.toFixed(8)}</td>
+                    <td className="text-end">{coin.price.toFixed(2)}€</td>
+                    <td
+                      className="text-end"
+                      style={{
+                        color: coin.profitLoss >= 0 ? "lightgreen" : "red",
+                      }}
+                    >
+                      {coin.profitLoss.toFixed(2)}€
+                    </td>
+                    <td className="text-center">
+                      <button
+                        style={{
+                          fontSize: "12px",
+                          marginLeft: "5px",
+                          marginRight: "5px",
+                        }}
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleDeleteCoin(coin.id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {/* CELKOVÉ SUMY */}
+                <tr className="fw-bold table-secondary table-dark">
+                  <td>Placed value</td>
+                  <td className="text-end">{totalDepositAll.toFixed(2)}€</td>
+                  <td className="text-end">—</td>
+                  <td className="text-end">—</td>
+                  <td
+                    className={`text-end ${
+                      totalProfitLossAll >= 0 ? "text-success" : "text-danger"
+                    }`}
+                  >
+                    {totalProfitLossAll.toFixed(2)}€
+                  </td>
+                  <td></td> {/* Prázdny stĺpec na zarovnanie */}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {/* Zobrazenie transakcii*/}
+        <div>
+          <h3 style={{ marginLeft: "20px" }} className="text-left mt-4">
+            Total statistics by Month
+          </h3>
+          {coins.length === 0 ? (
+            <p>Loading Assets...</p>
+          ) : (
+            <div className="table-responsive small">
+              {/* Zobrazenie transakcií v tabuľke */}
+              <table
+                style={{ fontSize: "14px", cursor: "pointer" }}
+                className="table table-dark table-striped table-bordered table-sm text-nowrap"
+              >
+                <thead className="table-dark">
+                  <tr>
+                    <th>Month-Year</th>
+                    {coins.map((coin) => (
+                      <th key={coin._id}>{coin.name}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Zobrazenie mesiacov a transakcií */}
+                  {coins
+                    .flatMap((coin) =>
+                      Object.keys(groupTransactionsByMonth(coin))
+                    )
+                    .filter(
+                      (value, index, self) => self.indexOf(value) === index
+                    )
+                    .sort()
+                    .map((monthYear) => (
+                      <tr key={monthYear}>
+                        <td style={{ paddingTop: "15px" }}>{monthYear}</td>
+                        {coins.map((coin) => {
+                          const groupedTransactions =
+                            groupTransactionsByMonth(coin);
+                          const transactions = groupedTransactions[
+                            monthYear
+                          ] || { deposit: 0, withdraw: 0, total: 0 };
+                          // Vypočítať celkový výnos/stratu
+                          transactions.total =
+                            transactions.withdraw - transactions.deposit;
+                          return (
+                            <td key={coin._id}>
+                              <tr>
+                                <div style={{ color: "white" }}>
+                                  Deposits: {transactions.deposit.toFixed(2)}€
+                                </div>
+                              </tr>
+                              <tr>
+                                <div style={{ color: "white" }}>
+                                  Withdrawals:{" "}
+                                  {transactions.withdraw.toFixed(2)}€
+                                </div>
+                              </tr>
+                              <tr></tr>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  {/* Riadok so sumárnym Profit/Loss za všetky mesiace pre každý coin */}
+                  <tr style={{ fontWeight: "bold", backgroundColor: "#222" }}>
+                    <td>Total Profit/Loss</td>
+                    {coins.map((coin) => {
+                      // Vypočítať celkový profit/loss podľa vzorca withdrawals - deposits
+                      const groupedTransactions =
+                        groupTransactionsByMonth(coin);
+                      const totalProfitLoss = Object.values(
+                        groupedTransactions
+                      ).reduce(
+                        (sum, transaction) =>
+                          sum + (transaction.withdraw - transaction.deposit),
+                        0
+                      );
+                      return (
+                        <td key={coin._id}>
+                          <div
+                            style={{
+                              color:
+                                totalProfitLoss >= 0 ? "lightgreen" : "red",
+                              fontSize: "16px",
+                            }}
+                          >
+                            {totalProfitLoss.toFixed(2)}€
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  {/* Riadok so sumárnym Total Profit/Loss za všetky coiny dokopy */}
+                  <tr style={{ fontWeight: "bold", backgroundColor: "#333" }}>
+                    <td>Grand Total Profit/Loss</td>
+                    <td colSpan={coins.length} style={{ textAlign: "center" }}>
+                      {(() => {
+                        // Spočítame Total Profit/Loss pre všetky coiny dokopy
+                        const grandTotalProfitLoss = coins.reduce(
+                          (totalSum, coin) => {
+                            const groupedTransactions =
+                              groupTransactionsByMonth(coin);
+                            const totalProfitLoss = Object.values(
+                              groupedTransactions
+                            ).reduce(
+                              (sum, transaction) =>
+                                sum +
+                                (transaction.withdraw - transaction.deposit),
+                              0
+                            );
+                            return totalSum + totalProfitLoss;
+                          },
+                          0
+                        );
+                        return (
+                          <div
+                            style={{
+                              color:
+                                grandTotalProfitLoss >= 0
+                                  ? "lightgreen"
+                                  : "red",
+                              fontSize: "18px",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {grandTotalProfitLoss.toFixed(2)}€
+                          </div>
+                        );
+                      })()}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        <div></div>
+      </div>
     </div>
   );
-};
-
+}
 export default App;
