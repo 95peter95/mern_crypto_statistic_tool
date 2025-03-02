@@ -130,8 +130,6 @@ function App() {
 
   return (
     <Container fluid>
-      <ToastContainer position="top-center" autoClose={2000} hideProgressBar />
-      
       <Row className="justify-content-center bg-dark text-light py-3">
         <Col xs={12} lg={6} className="text-center">
           <h1>Crypto Dashboard</h1>
@@ -140,6 +138,7 @@ function App() {
       
       <Row className="justify-content-center my-3">
         <Col xs={12} md={6} lg={6}>
+        <ToastContainer position="top-center" autoClose={1000} hideProgressBar />
           <AddAsset
             newCoin={newCoin}
             handleAddCoin={handleAddCoin}
