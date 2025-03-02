@@ -133,13 +133,13 @@ function App() {
       <ToastContainer position="top-center" autoClose={2000} hideProgressBar />
       
       <Row className="justify-content-center bg-dark text-light py-3">
-        <Col xs={12} lg={4} className="text-center">
+        <Col xs={12} lg={6} className="text-center">
           <h1>Crypto Dashboard</h1>
         </Col>
       </Row>
       
       <Row className="justify-content-center my-3">
-        <Col xs={12} md={10} lg={4}>
+        <Col xs={12} md={6} lg={6}>
           <AddAsset
             newCoin={newCoin}
             handleAddCoin={handleAddCoin}
@@ -149,7 +149,7 @@ function App() {
       </Row>
       
       <Row className="justify-content-center my-3">
-        <Col xs={12} md={10} lg={4}>
+        <Col xs={12} md={6} lg={6}>
           <AddTransaction
             coins={coins}
             newTransaction={newTransaction}
@@ -160,13 +160,13 @@ function App() {
       </Row>
       
       <Row className="justify-content-center my-3">
-        <Col xs={12} md={10} lg={4}>
+        <Col xs={12} md={6} lg={6}>
           <ActualStatistics coins={coins} prices={prices} onDelete={handleDeleteCoin} />
         </Col>
       </Row>
       
       <Row className="justify-content-center my-3">
-        <Col xs={12} md={10} lg={4}>
+        <Col xs={12} md={6} lg={6}>
           <CoinStatisticsByMonth coins={coins} />
         </Col>
       </Row>
