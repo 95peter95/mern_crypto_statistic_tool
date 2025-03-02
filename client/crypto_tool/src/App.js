@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
+import {Container, Row, Col } from 'react-bootstrap';
 import "./App.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -128,34 +129,49 @@ function App() {
   };
 
   return (
-    <div>
+    <Container fluid>
       <ToastContainer position="top-center" autoClose={2000} hideProgressBar />
-      <div>
-        <div
-          style={{ background: "#211f1f",width: "140.2%",height: "100px",marginLeft: "-551px",marginTop: "-20px",padding: "0px",color: "#f4f4f4" }}>
-          <h1 style={{ paddingTop: "30px", paddingLeft: "750px" }} className="text-left mb-4">
-            Crypto Dashboard
-          </h1>
-        </div>
-        <AddAsset
-          newCoin={newCoin}
-          handleAddCoin={handleAddCoin}
-          handleNewCoinChange={handleNewCoinChange}
-        />
-        <AddTransaction
-          coins={coins}
-          newTransaction={newTransaction}
-          handleAddTransaction={handleAddTransaction}
-          handleNewTransactionChange={handleNewTransactionChange}
-        />
-        <ActualStatistics
-          coins={coins}
-          prices={prices}
-          onDelete={handleDeleteCoin}
-        />
-        <CoinStatisticsByMonth coins={coins} />
-      </div>
-    </div>
+      
+      <Row className="justify-content-center bg-dark text-light py-3">
+        <Col xs={12} lg={4} className="text-center">
+          <h1>Crypto Dashboard</h1>
+        </Col>
+      </Row>
+      
+      <Row className="justify-content-center my-3">
+        <Col xs={12} md={10} lg={4}>
+          <AddAsset
+            newCoin={newCoin}
+            handleAddCoin={handleAddCoin}
+            handleNewCoinChange={handleNewCoinChange}
+          />
+        </Col>
+      </Row>
+      
+      <Row className="justify-content-center my-3">
+        <Col xs={12} md={10} lg={4}>
+          <AddTransaction
+            coins={coins}
+            newTransaction={newTransaction}
+            handleAddTransaction={handleAddTransaction}
+            handleNewTransactionChange={handleNewTransactionChange}
+          />
+        </Col>
+      </Row>
+      
+      <Row className="justify-content-center my-3">
+        <Col xs={12} md={10} lg={4}>
+          <ActualStatistics coins={coins} prices={prices} onDelete={handleDeleteCoin} />
+        </Col>
+      </Row>
+      
+      <Row className="justify-content-center my-3">
+        <Col xs={12} md={10} lg={4}>
+          <CoinStatisticsByMonth coins={coins} />
+        </Col>
+      </Row>
+    </Container>
   );
 }
+
 export default App;

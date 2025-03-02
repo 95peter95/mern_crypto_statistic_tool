@@ -3,14 +3,14 @@ import React from "react";
 const AddTransaction = ({ coins, newTransaction, handleAddTransaction, handleNewTransactionChange }) => {
   
   return (
-    <div style={{ marginTop: "-30px" }} className="table-responsive small">
-      <h4 className="text-left mt-4">Execute transaction</h4>
+    <div className="table-responsive small">
+      <h4 className="text-left">Execute transaction</h4>
       <table className="table table-striped table-bordered table-sm text-nowrap">
         <tbody>
           <tr className="table-dark">
-            <td style={{ paddingRight: "20px" }}>
+            <td>
               <select
-                style={{ cursor: "pointer" }}
+                style={{ cursor: "pointer", fontSize: '85%' }}
                 className="form-control"
                 value={newTransaction.coinId}
                 onChange={(e) =>
@@ -25,9 +25,9 @@ const AddTransaction = ({ coins, newTransaction, handleAddTransaction, handleNew
                 ))}
               </select>
             </td>
-            <td style={{ paddingRight: "10px", paddingLeft: "10px" }}>
+            <td>
               <select
-                style={{ cursor: "pointer" }}
+                style={{ cursor: "pointer", fontSize: '85%' }}
                 className="form-control"
                 value={newTransaction.type}
                 onChange={(e) =>
@@ -38,14 +38,9 @@ const AddTransaction = ({ coins, newTransaction, handleAddTransaction, handleNew
                 <option value="withdraw">Sell</option>
               </select>
             </td>
-            <td
-              style={{
-                paddingRight: "10px",
-                paddingLeft: "10px",
-                width: "150px",
-              }}
-            >
+            <td>
               <input
+              style={{ fontSize: '85%' }}
                 type="number"
                 className="form-control"
                 placeholder="Price(€)"
@@ -55,14 +50,9 @@ const AddTransaction = ({ coins, newTransaction, handleAddTransaction, handleNew
                 }
               />
             </td>
-            <td
-              style={{
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                width: "215px",
-              }}
-            >
+            <td>
               <input
+              style={{ fontSize: '85%' }}
                 type="number"
                 className="form-control"
                 placeholder="Amount"
@@ -74,7 +64,7 @@ const AddTransaction = ({ coins, newTransaction, handleAddTransaction, handleNew
             </td>
             <td className="text-center">
               <button
-                style={{ margin: "3px" }}
+              style={{ cursor: "pointer", fontSize: '85%' }}
                 className="btn btn-primary btn-sm"
                 onClick={handleAddTransaction}
               >

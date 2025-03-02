@@ -32,17 +32,14 @@ const groupTransactionsByMonth = (coin) => {
 const CoinStatisticsByMonth = ({ coins }) => {
   return (
     <div>
-      <h3 className="text-left" style={{ marginLeft: "20px"}}>
+      <h4 className="text-left">
         Total statistics by Month
-      </h3>
+      </h4>
       {coins.length === 0 ? (
         <p>Loading Assets...</p>
       ) : (
         <div className="table-responsive small">
-          <table
-            style={{ fontSize: "14px", cursor: "pointer" }}
-            className="table table-dark table-striped table-bordered table-sm text-nowrap"
-          >
+          <table className="table table-dark table-striped table-bordered table-sm text-nowrap">
             <thead className="table-dark">
               <tr>
                 <th>Month-Year</th>
@@ -58,7 +55,7 @@ const CoinStatisticsByMonth = ({ coins }) => {
                 .sort()
                 .map((monthYear) => (
                   <tr key={monthYear}>
-                    <td style={{ paddingTop: "15px" }}>{monthYear}</td>
+                    <td>{monthYear}</td>
                     {coins.map((coin) => {
                       const groupedTransactions = groupTransactionsByMonth(coin);
                       const transactions = groupedTransactions[monthYear] || {

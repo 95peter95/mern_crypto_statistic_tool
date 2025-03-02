@@ -3,13 +3,14 @@ import React from "react";
 const AddAsset = ({ handleNewCoinChange, handleAddCoin, newCoin }) => {
   return (
     <div>
-      <div style={{ marginTop: "0px" }} className="table-responsive small">
-        <h4 className="text-left mt-4">Add New Asset</h4>
+      <div className="table-responsive small">
+        <h4 className="text-left">Add New Asset</h4>
         <table className="table table-striped table-bordered table-sm text-nowrap">
           <tbody>
             <tr className="table-dark">
-              <td style={{ paddingRight: "10px" }}>
+              <td>
                 <input
+                  style={{ fontSize: '85%' }}
                   type="text"
                   className="form-control"
                   placeholder="Name"
@@ -17,8 +18,9 @@ const AddAsset = ({ handleNewCoinChange, handleAddCoin, newCoin }) => {
                   onChange={(e) => handleNewCoinChange("name", e.target.value)}
                 />
               </td>
-              <td style={{ paddingRight: "10px", paddingLeft: "10px" }}>
+              <td>
                 <input
+                style={{ fontSize: '85%' }}
                   type="text"
                   className="form-control"
                   placeholder="API ID"
@@ -28,14 +30,9 @@ const AddAsset = ({ handleNewCoinChange, handleAddCoin, newCoin }) => {
                   }
                 />
               </td>
-              <td style={{ paddingRight: "20px" }} className="text-center">
+              <td className="text-center">
                 <button
-                  style={{
-                    margin: "3px",
-                    marginLeft: "20px",
-                    paddingLeft: "50px",
-                    paddingRight: "50px",
-                  }}
+                  style={{ cursor: "pointer", fontSize: '85%' }}
                   className="btn btn-success btn-sm"
                   onClick={handleAddCoin}
                 >

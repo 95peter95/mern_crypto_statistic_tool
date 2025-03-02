@@ -42,15 +42,10 @@ const ActualStatistics = ({ coins, prices, onDelete }) => {
   const { totals, totalDepositAll, totalProfitLossAll } = calculateTotals();
     
   return (
-    <div style={{ marginTop: "-30px" }}>
-      <h3 style={{ marginLeft: "20px" }} className="text-left mt-4">
-        Actual statistics
-      </h3>
+    <div>
       <div className="table-responsive small">
-            <table
-              style={{ fontSize: "14px", cursor: "pointer", width: "700px" }}
-              className="table table-dark table-striped table-bordered table-sm text-nowrap"
-            >
+      <h4 className="text-left">Actual statistics</h4>
+            <table className="table table-dark table-striped table-bordered table-sm text-nowrap">
               <thead className="table-dark text-center">
                 <tr>
                   <th>Asset</th>
@@ -80,15 +75,10 @@ const ActualStatistics = ({ coins, prices, onDelete }) => {
                     </td>
                     <td className="text-center">
                       <button
-                        style={{
-                          fontSize: "12px",
-                          marginLeft: "5px",
-                          marginRight: "5px",
-                        }}
                         className="btn btn-danger btn-sm"
                         onClick={() => onDelete(coin.id)}
                       >
-                        Delete
+                        X
                       </button>
                     </td>
                   </tr>
